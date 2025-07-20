@@ -1,7 +1,7 @@
 use clap::{Arg, Command};
 use std::collections::HashMap;
 use std::fs;
-use std::io::{self, Write};
+use std::io::{self};
 
 mod secure;
 
@@ -109,19 +109,27 @@ fn check_env(example_path: &str, env_path: &str) -> io::Result<()> {
 
 fn sync_env(example_path: &str, env_path: &str) -> io::Result<()> {
     let example_vars = parse_env_file(example_path)?;
-    let actual_vars = parse_env_file(env_path)?;
+    let mut actual_vars = parse_env_file(env_path).unwrap_or_default();
 
-    let missing: Vec<_> = example_vars
-        .iter()
-        .filter(|(k, _)| !actual_vars.contains_key(*k))
-        .collect();
-
-    if !missing.is_empty() {
-        let mut file = fs::OpenOptions::new().append(true).open(env_path)?;
-        for (key, value) in missing {
-            writeln!(file, "\n{}={}", key, value)?;
-        }
+    // Add missing keys from .env.example
+    for (key, value) in example_vars {
+        actual_vars.entry(key.trim().to_string())
+            .or_insert(value.trim().to_string());
     }
+
+    // Sort keys alphabetically
+    let mut sorted: Vec<_> = actual_vars.iter().collect();
+    sorted.sort_by_key(|(k, _)| k.to_lowercase());
+
+    // Rebuild and overwrite .env
+    let formatted = sorted
+        .into_iter()
+        .map(|(k, v)| format!("{}={}", k.trim(), v.trim()))
+        .collect::<Vec<String>>()
+        .join("\n");
+
+    fs::write(env_path, formatted + "\n")?;
 
     Ok(())
 }
+
