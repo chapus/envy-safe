@@ -8,7 +8,7 @@
 
 - ✅ Validate `.env` against `.env.example`
 - 🔄 Sync missing variables from `.env.example`
-- 🔐 (Coming Soon) Encrypt/decrypt secrets with `age`
+- 🔐 Encrypt/decrypt secrets with `age`
 - 🧪 GitHub Action for CI validation
 - 📦 Built with Rust, installable via `cargo`
 
@@ -106,7 +106,6 @@ And running `--sync` will append the missing key to `.env`.
 - `envy-safe encrypt`: Encrypt sensitive variables in `.env`
 - `envy-safe decrypt`: Decrypt them for runtime use
 - GitHub Action: Fail CI if `.env` is out-of-sync
-- `cargo envy-safe`: Use it as a Cargo subcommand
 
 ---
 
