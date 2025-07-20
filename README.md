@@ -2,7 +2,7 @@
 
 > A secure, developer-friendly CLI to manage and validate your `.env` files in Rust projects.
 
-![GitHub stars](https://img.shields.io/github/stars/your-user/envy-safe?style=social)
+![GitHub stars](https://img.shields.io/github/stars/chapus/envy-safe?style=social)
 
 ## ✨ Features
 
