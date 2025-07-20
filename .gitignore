@@ -1,0 +1,30 @@
+# Rust build artifacts
+/target
+**/*.rs.bk
+
+# Cargo
+Cargo.lock
+.cargo/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
+
+# Logs and backups
+*.log
+*.tmp
+
+# System files
+.DS_Store
+Thumbs.db
+
+# dotenv files (optional if secrets)
+.env
+.env.example
+
+# age keys (if generated locally)
+*.age
+*.txt.age

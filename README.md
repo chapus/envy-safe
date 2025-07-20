@@ -47,6 +47,18 @@ Adds missing keys from `.env.example` to `.env` with example values.
 
 ---
 
+### 📦 As a Cargo Subcommand
+
+Once installed, you can use `envy-safe` like any built-in cargo command:
+
+```bash
+cargo envy-safe --check
+cargo envy-safe --sync
+cargo envy-safe --encrypt API_KEY
+cargo envy-safe --decrypt API_KEY
+
+---
+
 ### 🔐 Encrypting Values
 
 To encrypt values in your `.env` file, set your [age](https://github.com/FiloSottile/age) public key as an environment variable:

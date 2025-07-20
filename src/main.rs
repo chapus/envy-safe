@@ -1,9 +1,6 @@
-// envy-safe/src/main.rs
-
-use clap::{Arg, Command};
-use std::fs;
-use std::path::Path;
+use clap::{arg, command, Arg, ArgMatches, Command};
 use std::collections::HashMap;
+use std::fs;
 use std::io::{self, Write};
 
 mod secure;
@@ -18,56 +15,56 @@ fn main() {
                 .short('c')
                 .long("check")
                 .help("Check for required keys in .env against .env.example")
-                .takes_value(false),
+                .action(clap::ArgAction::SetTrue),
         )
         .arg(
             Arg::new("sync")
                 .short('s')
                 .long("sync")
                 .help("Sync missing keys from .env.example to .env")
-                .takes_value(false),
+                .action(clap::ArgAction::SetTrue),
         )
         .arg(
             Arg::new("encrypt")
                 .long("encrypt")
                 .value_name("KEY")
                 .help("Encrypt the value of a key in .env file using age")
-                .takes_value(true),
+                .num_args(1),
         )
         .arg(
             Arg::new("decrypt")
                 .long("decrypt")
                 .value_name("KEY")
                 .help("Decrypt the value of a key in .env file using age")
-                .takes_value(true),
+                .num_args(1),
         )
         .get_matches();
 
     let example_env = ".env.example";
     let actual_env = ".env";
 
-    if matches.is_present("check") {
+    if matches.get_flag("check") {
         match check_env(example_env, actual_env) {
             Ok(_) => println!("✅ .env file is valid."),
             Err(e) => eprintln!("❌ Validation failed: {}", e),
         }
     }
 
-    if matches.is_present("sync") {
+    if matches.get_flag("sync") {
         match sync_env(example_env, actual_env) {
             Ok(_) => println!("✅ Synced .env with missing keys from .env.example."),
             Err(e) => eprintln!("❌ Sync failed: {}", e),
         }
     }
 
-    if let Some(key) = matches.value_of("encrypt") {
+    if let Some(key) = matches.get_one::<String>("encrypt") {
         match secure::encrypt_key(actual_env, key) {
             Ok(_) => println!("🔐 Encrypted key '{}'", key),
             Err(e) => eprintln!("❌ Encryption failed: {}", e),
         }
     }
 
-    if let Some(key) = matches.value_of("decrypt") {
+    if let Some(key) = matches.get_one::<String>("decrypt") {
         match secure::decrypt_key(actual_env, key) {
             Ok(value) => println!("🔓 {} = {}", key, value),
             Err(e) => eprintln!("❌ Decryption failed: {}", e),
@@ -112,7 +109,7 @@ fn check_env(example_path: &str, env_path: &str) -> io::Result<()> {
 
 fn sync_env(example_path: &str, env_path: &str) -> io::Result<()> {
     let example_vars = parse_env_file(example_path)?;
-    let mut actual_vars = parse_env_file(env_path)?;
+    let actual_vars = parse_env_file(env_path)?;
 
     let missing: Vec<_> = example_vars
         .iter()
