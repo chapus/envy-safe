@@ -53,7 +53,26 @@ To encrypt values in your `.env` file, set your [age](https://github.com/FiloSot
 
 ```bash
 export ENVY_AGE_RECIPIENT="age1xyz..."
+```
 
+Then run:
+
+```bash
+envy-safe --encrypt API_KEY
+```
+
+You can also create a config file at:
+
+- Linux/macOS: `~/.config/envy-safe/config.toml`
+- Windows: `%APPDATA%\envy-safe\config.toml`
+
+```toml
+recipient = "age1xyz..."
+```
+
+> If `ENVY_AGE_RECIPIENT` is not set and no config file is found, encryption will fail with an informative message.
+
+---
 
 ## 📋 Example
 Given a `.env.example` like:

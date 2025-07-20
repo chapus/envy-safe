@@ -1,81 +1,58 @@
-// envy-safe/src/secure.rs
-
+use std::process::{Command, Stdio};
+use std::env;
 use std::fs;
-use std::io::{self, Write};
-use std::collections::HashMap;
-use std::process::Command;
 
-use super::parse_env_file;
+use std::path::PathBuf;
+use dirs::config_dir;
+use toml::Value;
 
-pub fn encrypt_key(env_path: &str, key: &str) -> io::Result<()> {
-    let mut vars = parse_env_file(env_path)?;
-
-    if let Some(value) = vars.get(key) {
-        let encrypted = encrypt_with_age(value)?;
-        let new_line = format!("{}={}", key, encrypted);
-        let new_contents = replace_key(env_path, key, &new_line)?;
-        fs::write(env_path, new_contents)?;
-    } else {
-        return Err(io::Error::new(io::ErrorKind::NotFound, "Key not found"));
+fn get_age_recipient() -> Option<String> {
+    // 1. Check ENV
+    if let Ok(key) = env::var("ENVY_AGE_RECIPIENT") {
+        return Some(key);
     }
 
-    Ok(())
-}
-
-pub fn decrypt_key(env_path: &str, key: &str) -> io::Result<String> {
-    let vars = parse_env_file(env_path)?;
-
-    if let Some(value) = vars.get(key) {
-        let decrypted = decrypt_with_age(value)?;
-        Ok(decrypted)
-    } else {
-        Err(io::Error::new(io::ErrorKind::NotFound, "Key not found"))
-    }
-}
-
-fn encrypt_with_age(value: &str) -> io::Result<String> {
-    let output = Command::new("age")
-        .args(["-e", "-r", "AGE-RECIPIENT-HERE"])
-        .stdin(std::process::Stdio::piped())
-        .stdout(std::process::Stdio::piped())
-        .spawn()
-        .and_then(|mut child| {
-            child.stdin.as_mut().unwrap().write_all(value.as_bytes())?;
-            let output = child.wait_with_output()?;
-            Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
-        })?;
-
-    Ok(output)
-}
-
-fn decrypt_with_age(value: &str) -> io::Result<String> {
-    let output = Command::new("age")
-        .arg("-d")
-        .stdin(std::process::Stdio::piped())
-        .stdout(std::process::Stdio::piped())
-        .spawn()
-        .and_then(|mut child| {
-            child.stdin.as_mut().unwrap().write_all(value.as_bytes())?;
-            let output = child.wait_with_output()?;
-            Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
-        })?;
-
-    Ok(output)
-}
-
-fn replace_key(path: &str, key: &str, new_line: &str) -> io::Result<String> {
-    let contents = fs::read_to_string(path)?;
-    let new_contents = contents
-        .lines()
-        .map(|line| {
-            if line.trim_start().starts_with(&format!("{}=", key)) {
-                new_line.to_string()
-            } else {
-                line.to_string()
+    // 2. Check config file
+    if let Some(mut config_path) = config_dir() {
+        config_path.push("envy-safe/config.toml");
+        if config_path.exists() {
+            if let Ok(contents) = fs::read_to_string(config_path) {
+                if let Ok(parsed) = contents.parse::<Value>() {
+                    if let Some(recipient) = parsed.get("recipient") {
+                        return recipient.as_str().map(String::from);
+                    }
+                }
             }
-        })
-        .collect::<Vec<_>>()
-        .join("\n");
+        }
+    }
 
-    Ok(new_contents)
+    None
+}
+
+pub fn encrypt_with_age(value: &str) -> Result<String, String> {
+    let recipient = get_age_recipient().ok_or("Missing AGE recipient key. Set ENVY_AGE_RECIPIENT or ~/.config/envy-safe/config.toml")?;
+
+    let mut cmd = Command::new("age")
+        .args(["-e", "-r", &recipient])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("Failed to run age: {}", e))?;
+
+    if let Some(stdin) = &mut cmd.stdin {
+        use std::io::Write;
+        stdin
+            .write_all(value.as_bytes())
+            .map_err(|e| format!("Failed to write to age stdin: {}", e))?;
+    }
+
+    let output = cmd
+        .wait_with_output()
+        .map_err(|e| format!("Failed to read age output: {}", e))?;
+
+    if output.status.success() {
+        Ok(String::from_utf8_lossy(&output.stdout).to_string())
+    } else {
+        Err(String::from_utf8_lossy(&output.stderr).to_string())
+    }
 }
