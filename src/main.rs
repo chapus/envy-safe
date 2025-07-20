@@ -119,7 +119,7 @@ fn sync_env(example_path: &str, env_path: &str) -> io::Result<()> {
     if !missing.is_empty() {
         let mut file = fs::OpenOptions::new().append(true).open(env_path)?;
         for (key, value) in missing {
-            writeln!(file, "{}={}", key, value)?;
+            writeln!(file, "\n{}={}", key, value)?;
         }
     }
 
