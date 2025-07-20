@@ -47,6 +47,14 @@ Adds missing keys from `.env.example` to `.env` with example values.
 
 ---
 
+### 🔐 Encrypting Values
+
+To encrypt values in your `.env` file, set your [age](https://github.com/FiloSottile/age) public key as an environment variable:
+
+```bash
+export ENVY_AGE_RECIPIENT="age1xyz..."
+
+
 ## 📋 Example
 Given a `.env.example` like:
 ```

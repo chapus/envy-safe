@@ -6,6 +6,8 @@ use std::path::Path;
 use std::collections::HashMap;
 use std::io::{self, Write};
 
+mod secure;
+
 fn main() {
     let matches = Command::new("envy-safe")
         .version("0.1.0")
@@ -25,6 +27,20 @@ fn main() {
                 .help("Sync missing keys from .env.example to .env")
                 .takes_value(false),
         )
+        .arg(
+            Arg::new("encrypt")
+                .long("encrypt")
+                .value_name("KEY")
+                .help("Encrypt the value of a key in .env file using age")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::new("decrypt")
+                .long("decrypt")
+                .value_name("KEY")
+                .help("Decrypt the value of a key in .env file using age")
+                .takes_value(true),
+        )
         .get_matches();
 
     let example_env = ".env.example";
@@ -41,6 +57,20 @@ fn main() {
         match sync_env(example_env, actual_env) {
             Ok(_) => println!("✅ Synced .env with missing keys from .env.example."),
             Err(e) => eprintln!("❌ Sync failed: {}", e),
+        }
+    }
+
+    if let Some(key) = matches.value_of("encrypt") {
+        match secure::encrypt_key(actual_env, key) {
+            Ok(_) => println!("🔐 Encrypted key '{}'", key),
+            Err(e) => eprintln!("❌ Encryption failed: {}", e),
+        }
+    }
+
+    if let Some(key) = matches.value_of("decrypt") {
+        match secure::decrypt_key(actual_env, key) {
+            Ok(value) => println!("🔓 {} = {}", key, value),
+            Err(e) => eprintln!("❌ Decryption failed: {}", e),
         }
     }
 }
