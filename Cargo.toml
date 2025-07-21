@@ -1,6 +1,6 @@
 [package]
 name = "cargo-envy-safe"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["Sergio Pereda <sergio@adtv.io>"]
 description = "A secure and safe CLI to manage .env files in Rust projects"
