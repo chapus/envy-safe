@@ -6,8 +6,8 @@ authors = ["Sergio Pereda <sergio@adtv.io>"]
 description = "A secure and safe CLI to manage .env files in Rust projects"
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/YOUR_USERNAME/envy-safe"
-homepage = "https://github.com/YOUR_USERNAME/envy-safe"
+repository = "https://github.com/chapus/envy-safe"
+homepage = "https://github.com/chapus/envy-safe"
 keywords = ["dotenv", "cli", "env", "security", "config"]
 categories = ["command-line-utilities", "development-tools"]
 
